@@ -24,7 +24,7 @@ def load_and_filter_data():
     for item in all_data:
         # Dateiname aus JSON nehmen, Endung auf .png erzwingen
         basis_name = os.path.splitext(item['image_file'])[0]
-        image_path = os.path.join("images", basis_name + ".png")
+        image_path = image_path = basis_name + ".png"
         
         # Nur aufnehmen, wenn die Datei auch physisch existiert
         if os.path.exists(image_path):
