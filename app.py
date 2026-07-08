@@ -6,13 +6,13 @@ import os
 # Konfiguration
 st.set_page_config(page_title="Wappen-Quiz", page_icon="🛡️")
 
-# Hilfsfunktion für den Vergleich
+# Hilfsfunktion für den Vergleich (ignoriert Umlaute und Groß-/Kleinschreibung)
 def normalize_string(s):
     s = s.strip().lower()
     s = s.replace("ü", "ue").replace("ö", "oe").replace("ä", "ae").replace("ß", "ss")
     return s
 
-# Daten laden und NUR Bilder verwenden, die im Ordner existieren
+# Daten laden und NUR Bilder verwenden, die im Hauptverzeichnis existieren
 def load_and_filter_data():
     if not os.path.exists("wappen.json"):
         return None
@@ -22,9 +22,10 @@ def load_and_filter_data():
     
     valid_data = []
     for item in all_data:
-        # Dateiname aus JSON nehmen, Endung auf .png erzwingen
+        # Dateiname aus JSON nehmen
         basis_name = os.path.splitext(item['image_file'])[0]
-        image_path = image_path = basis_name + ".png"
+        # Suche direkt im aktuellen Ordner (Root)
+        image_path = basis_name + ".png"
         
         # Nur aufnehmen, wenn die Datei auch physisch existiert
         if os.path.exists(image_path):
@@ -37,10 +38,10 @@ if 'data' not in st.session_state:
     st.session_state.data = load_and_filter_data()
     st.session_state.score = 0
 
-# Fehlerbehandlung: Wenn keine Bilder gefunden wurden
+# Fehlerbehandlung
 if st.session_state.data is None or len(st.session_state.data) == 0:
-    st.error("Fehler: Keine gültigen Bilder in 'images' gefunden oder 'wappen.json' fehlt.")
-    st.write("Stelle sicher, dass die Bilder im Ordner 'images' liegen und in der 'wappen.json' korrekt benannt sind.")
+    st.error("Fehler: Keine gültigen Bilder gefunden.")
+    st.write("Bitte prüfe, ob die .png Dateien direkt neben der app.py liegen.")
     st.stop()
 
 if 'current' not in st.session_state:
@@ -52,9 +53,9 @@ st.write(f"### Aktueller Punktestand: {st.session_state.score}")
 
 # Bild laden
 basis_name = os.path.splitext(st.session_state.current['image_file'])[0]
-image_path = os.path.join("images", basis_name + ".png")
+image_path = basis_name + ".png"
 
-# Da wir oben gefiltert haben, müsste das Bild jetzt immer existieren
+# Bild anzeigen
 st.image(image_path, width=300)
 
 st.write("---")
