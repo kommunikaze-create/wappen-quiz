@@ -1,0 +1,79 @@
+import streamlit as st
+import json
+import random
+import os
+
+# Konfiguration
+st.set_page_config(page_title="Wappen-Quiz", page_icon="🛡️")
+
+# Hilfsfunktion für den Vergleich
+def normalize_string(s):
+    s = s.strip().lower()
+    s = s.replace("ü", "ue").replace("ö", "oe").replace("ä", "ae").replace("ß", "ss")
+    return s
+
+# Daten laden und NUR Bilder verwenden, die im Ordner existieren
+def load_and_filter_data():
+    if not os.path.exists("wappen.json"):
+        return None
+    
+    with open("wappen.json", "r", encoding="utf-8") as f:
+        all_data = json.load(f)
+    
+    valid_data = []
+    for item in all_data:
+        # Dateiname aus JSON nehmen, Endung auf .png erzwingen
+        basis_name = os.path.splitext(item['image_file'])[0]
+        image_path = os.path.join("images", basis_name + ".png")
+        
+        # Nur aufnehmen, wenn die Datei auch physisch existiert
+        if os.path.exists(image_path):
+            valid_data.append(item)
+            
+    return valid_data
+
+# Initialisierung
+if 'data' not in st.session_state:
+    st.session_state.data = load_and_filter_data()
+    st.session_state.score = 0
+
+# Fehlerbehandlung: Wenn keine Bilder gefunden wurden
+if st.session_state.data is None or len(st.session_state.data) == 0:
+    st.error("Fehler: Keine gültigen Bilder in 'images' gefunden oder 'wappen.json' fehlt.")
+    st.write("Stelle sicher, dass die Bilder im Ordner 'images' liegen und in der 'wappen.json' korrekt benannt sind.")
+    st.stop()
+
+if 'current' not in st.session_state:
+    st.session_state.current = random.choice(st.session_state.data)
+
+# UI
+st.title("🛡️ Wappen-Quiz")
+st.write(f"### Aktueller Punktestand: {st.session_state.score}")
+
+# Bild laden
+basis_name = os.path.splitext(st.session_state.current['image_file'])[0]
+image_path = os.path.join("images", basis_name + ".png")
+
+# Da wir oben gefiltert haben, müsste das Bild jetzt immer existieren
+st.image(image_path, width=300)
+
+st.write("---")
+
+# Eingabe
+answer = st.text_input("Welche Stadt ist das?")
+
+if st.button("Antwort prüfen"):
+    input_norm = normalize_string(answer)
+    target_norm = normalize_string(st.session_state.current['name'])
+    
+    if input_norm == target_norm:
+        st.success(f"Richtig! Das ist {st.session_state.current['name']}! 🎉")
+        st.session_state.score += 1
+        st.session_state.current = random.choice(st.session_state.data)
+        st.rerun()
+    else:
+        st.error("Leider falsch!")
+
+if st.button("Nächste Frage"):
+    st.session_state.current = random.choice(st.session_state.data)
+    st.rerun()
